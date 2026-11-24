@@ -6,7 +6,7 @@ export const metadata = { title: "Terms" };
 export default function TermsPage() {
   return (
     <article className="section">
-      <div className="wrap prose">
+      <div className="wrap prose legal">
         <h1>Terms of use</h1>
         <p>These terms are written in plain English for people using VerifiedHorses. They are the rules of the site. They are not a tailored legal opinion on your own sale.</p>
         <h2>The service</h2>

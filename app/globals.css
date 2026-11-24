@@ -339,6 +339,103 @@ textarea { min-height: 140px; }
 footer a { color: #fff; }
 footer .muted { color: #d5ddd8; }
 
+/* Phones. Desktop rules above are unchanged. md is 768px. */
+@media (max-width: 767px) {
+  html, body { max-width: 100%; overflow-x: clip; }
+  .wrap { width: min(1120px, calc(100% - 24px)); }
+  img, video, iframe, table, pre { max-width: 100%; }
+  pre { white-space: pre-wrap; }
+  table { text-align: left; }
+
+  .hero,
+  .section-head,
+  .card-body,
+  .price-panel,
+  .auth-card,
+  .notice,
+  .example,
+  .steps article,
+  .county-grid .panel,
+  footer,
+  footer h2,
+  footer p {
+    text-align: center;
+  }
+
+  h1, h2, h3,
+  .wrap > h1, .wrap > h2, .wrap > h3,
+  .prose > h1, .prose > h2, .prose > h3,
+  .section-head,
+  .hero h1, .hero p {
+    text-align: center;
+  }
+
+  .prose { margin-inline: auto; text-align: center; }
+  .prose > p, .hero p, .notice, .notice p, .example, .auth-card > p,
+  .wrap > p, .grid-2 h2, .grid-2 > div > p, .price-panel, .price-panel p {
+    text-align: center;
+  }
+
+  .prose.legal > p,
+  .prose.legal li,
+  .prose.legal td,
+  .prose.legal th {
+    text-align: left;
+  }
+  .prose.legal > h1,
+  .prose.legal > h2,
+  .prose.legal > h3 { text-align: center; }
+
+  .prose ul, .prose ol, ul, ol {
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+    text-align: left;
+  }
+  .prose .doc-list, .prose .plain-list, .prose .safe,
+  .doc-list, .plain-list, .safe, .good-grid {
+    width: 100%;
+  }
+  .doc-list li, .good-grid div, .plain-list li { text-align: center; }
+  .safe li, .prose.legal li { text-align: left; }
+
+  .hero .chips,
+  .chips,
+  .card-body .row,
+  .facts,
+  .section-head,
+  .progress,
+  .price-panel .row,
+  footer .grid-3 {
+    justify-content: center;
+    justify-items: center;
+    text-align: center;
+  }
+  .section-head { flex-direction: column; align-items: center; }
+  .progress { justify-content: center; }
+
+  form .row, .filters .row, label.row {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .stack > label, .filters > label, .search-bar label { text-align: center; }
+  input, select, textarea, .search-bar, .filters { text-align: left; }
+
+  main .button.gold,
+  main button.gold,
+  main a.button,
+  .mobile-bar .button {
+    width: 100%;
+    max-width: 28rem;
+    margin-inline: auto;
+  }
+  .chips .button, .row .button, .site-header .button { width: auto; margin-inline: 0; }
+  .mobile-bar .button { max-width: none; }
+
+  .cookie { left: 8px; right: 8px; width: auto; text-align: left; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { animation: none !important; transition: none !important; }

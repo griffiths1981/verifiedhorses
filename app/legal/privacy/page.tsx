@@ -5,7 +5,7 @@ export const metadata = { title: "Privacy" };
 export default function PrivacyPage() {
   return (
     <article className="section">
-      <div className="wrap prose">
+      <div className="wrap prose legal">
         <h1>Privacy notice</h1>
         <p>This notice explains how {legalEntity()} handles personal information under the UK GDPR and the Data Protection Act 2018. The contact for privacy questions is {contactEmail()}.</p>
         <h2>What we hold</h2>
