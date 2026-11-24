@@ -1,0 +1,16 @@
+node_modules
+.next
+data
+generated
+.env
+.env.local
+*.log
+npm-debug.log*
+tsconfig.tsbuildinfo
+video-service/node_modules
+video-service/data
+video-service/.env
+coverage
+*.db
+*.db-journal
+.DS_Store

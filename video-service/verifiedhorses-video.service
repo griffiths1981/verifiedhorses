@@ -1,0 +1,15 @@
+[Unit]
+Description=VerifiedHorses video encoder
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/verifiedhorses/video-service
+EnvironmentFile=/opt/verifiedhorses/video-service/.env
+ExecStart=/usr/bin/node /opt/verifiedhorses/video-service/server.js
+Restart=on-failure
+User=verifiedhorses
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
