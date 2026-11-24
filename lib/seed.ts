@@ -49,8 +49,8 @@ export async function seedIfEmpty() {
   if (process.env.SEED_DEMO === "false") return;
   if ((await prisma.user.count({ where: { isDemo: true } })) > 0) return;
 
-  const sellerPassword = await hashPassword("Demo-seller-1");
-  const buyerPassword = await hashPassword("Demo-buyer-1");
+  const sellerPassword = await hashPassword(process.env.SEED_SELLER_PASSWORD || "Demo-seller-1");
+  const buyerPassword = await hashPassword(process.env.SEED_BUYER_PASSWORD || "Demo-buyer-1");
   const amelia = await prisma.user.create({
     data: {
       email: "amelia@verifiedhorses.example",

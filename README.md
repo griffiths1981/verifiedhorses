@@ -33,9 +33,9 @@ Example accounts, created only when `SEED_DEMO` is not `false`:
 | Email | Password | Role |
 |---|---|---|
 | admin@verifiedhorses.example | value of `ADMIN_INITIAL_PASSWORD` (sample: `Demo-admin-1`) | admin |
-| amelia@verifiedhorses.example | `Demo-seller-1` | verified seller |
-| daniel@verifiedhorses.example | `Demo-seller-1` | verified seller |
-| buyer@verifiedhorses.example | `Demo-buyer-1` | buyer |
+| amelia@verifiedhorses.example | `SEED_SELLER_PASSWORD`, or `Demo-seller-1` | verified seller |
+| daniel@verifiedhorses.example | `SEED_SELLER_PASSWORD`, or `Demo-seller-1` | verified seller |
+| buyer@verifiedhorses.example | `SEED_BUYER_PASSWORD`, or `Demo-buyer-1` | buyer |
 
 These people and horses are made up. A banner says so on the site.
 
@@ -64,6 +64,13 @@ Suggested cron, once a day is enough at the start:
 
 Images are served directly (`images.unoptimized`). That is deliberate: the Next image optimiser would fetch pictures without the visitor's basic-auth header and they would break.
 
+A few settings exist only because of how this host builds:
+
+- `tsconfig.json` excludes `vitest.config.ts`. The install on Hostinger omits dev dependencies, so Next must not typecheck the Vitest config.
+- `next.config.ts` sets `experimental.cpus` to 2. The build server reports many CPUs but caps threads. A larger pool fails with “OS can't spawn worker thread”.
+- Set `SEED_SELLER_PASSWORD` and `SEED_BUYER_PASSWORD` when the example accounts should not use `Demo-seller-1` and `Demo-buyer-1`. The sign-in page hides those default passwords when either variable is set.
+- The hidden menu checkbox is clipped to 1px. Left at its default size it added about 164px of horizontal scroll on desktop.
+
 ## Video
 
 Sellers upload the clip to YouTube (Unlisted is fine) or Vimeo and paste the link. The site stores the video id. Advert pages show the YouTube thumbnail and load `youtube-nocookie.com` only after a tap. Nothing autoplays.
@@ -88,6 +95,7 @@ See `.env.example` for the full list.
 | `ADMIN_API_TOKEN` | Bearer token for the bot API in `AUTOMATION.md`. |
 | `ADMIN_INITIAL_PASSWORD` | Used once, if there is no admin user yet. |
 | `SEED_DEMO` | `false` skips the example horses and example people. Prices are still seeded. |
+| `SEED_SELLER_PASSWORD` / `SEED_BUYER_PASSWORD` | Optional passwords for the example seller and buyer. Defaults are `Demo-seller-1` and `Demo-buyer-1`. When either is set, the sign-in page does not show those defaults. |
 | `CONTACT_EMAIL` | Shown on the site and used for the weekly summary. |
 | `LEGAL_ENTITY_NAME` | Footer and privacy notice. Blank until you confirm it. |
 | `MAIL_FROM` | From address when Brevo is set. |

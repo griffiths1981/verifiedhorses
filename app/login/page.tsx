@@ -16,7 +16,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <label>Password<input name="password" type="password" autoComplete="current-password" required /></label>
           <button className="gold" type="submit">Sign in</button>
           <p>New here? <a href="/register">Create an account</a></p>
-          <p className="muted">Example accounts, if the demo data is loaded: buyer@verifiedhorses.example / Demo-buyer-1, and amelia@verifiedhorses.example / Demo-seller-1.</p>
+          {process.env.SEED_SELLER_PASSWORD || process.env.SEED_BUYER_PASSWORD ? null : (
+            <p className="muted">Example accounts, if the demo data is loaded: buyer@verifiedhorses.example / Demo-buyer-1, and amelia@verifiedhorses.example / Demo-seller-1.</p>
+          )}
         </form>
       </div>
     </section>

@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
     "mariadb",
   ],
   experimental: {
+    // Hostinger's build box reports dozens of CPUs but caps processes/threads,
+    // so 58 page-data workers fail with "OS can't spawn worker thread".
+    cpus: 2,
     serverActions: {
       bodySizeLimit: "40mb",
     },
