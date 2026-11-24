@@ -6,6 +6,9 @@ import { advertHeading } from "./description";
 import { formatPrice } from "./format";
 import { baseUrl } from "./config";
 import { safeEqual } from "./tokens";
+import { countsAsVideo, embedStatusFromHttp, oEmbedEndpoint } from "./video-links";
+import { videoUploadsEnabled } from "./config";
+import { recordEvent } from "./events";
 
 export function cronAuthorised(header: string | null, querySecret: string | null): boolean {
   const expected = process.env.CRON_SECRET || "";
@@ -57,7 +60,7 @@ function toSearchable(advert: {
     lng: advert.lng,
     status: advert.status,
     sellerVerified: advert.seller.idStatus === "verified",
-    hasVideo: advert.videos.some((video) => video.status === "ready" || video.status === "example"),
+    hasVideo: advert.videos.some((video) => countsAsVideo(video)),
     featured: advert.featured,
     publishedAt: advert.publishedAt?.toISOString() || null,
   };
@@ -170,10 +173,65 @@ export async function runWebhooks() {
   return { delivered, skipped: false };
 }
 
+export async function runVideoChecks(fetchImpl: typeof fetch = fetch) {
+  const prisma = await db();
+  const due = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const videos = await prisma.video.findMany({
+    where: {
+      provider: { in: ["youtube", "vimeo"] },
+      remoteId: { not: "" },
+      OR: [{ checkedAt: null }, { checkedAt: { lt: due } }, { embedStatus: "unchecked" }],
+    },
+    take: 40,
+  });
+  let checked = 0;
+  let flagged = 0;
+  for (const video of videos) {
+    const canonical = video.playbackPath || (video.provider === "vimeo" ? `https://vimeo.com/${video.remoteId}` : `https://www.youtube.com/watch?v=${video.remoteId}`);
+    const endpoint = oEmbedEndpoint({ provider: video.provider, canonicalUrl: canonical });
+    if (!endpoint) continue;
+    let status = 0;
+    let thumbnail = "";
+    try {
+      const response = await fetchImpl(endpoint, { signal: AbortSignal.timeout(5000) });
+      status = response.status;
+      if (response.ok) {
+        const body = (await response.json()) as { thumbnail_url?: string };
+        thumbnail = body.thumbnail_url || "";
+      }
+    } catch {
+      continue;
+    }
+    const embedStatus = embedStatusFromHttp(status);
+    await prisma.video.update({
+      where: { id: video.id },
+      data: {
+        embedStatus,
+        checkedAt: new Date(),
+        posterPath: thumbnail || video.posterPath,
+      },
+    });
+    checked += 1;
+    if (embedStatus !== "ok" && embedStatus !== "unchecked" && embedStatus !== video.embedStatus) {
+      flagged += 1;
+      await recordEvent("video.flagged", {
+        videoId: video.id,
+        advertId: video.advertId,
+        provider: video.provider,
+        remoteId: video.remoteId,
+        url: canonical,
+        embedStatus,
+      });
+    }
+  }
+  return { checked, flagged };
+}
+
 export async function runVideoSync() {
+  if (!videoUploadsEnabled()) return { updated: 0, skipped: true };
   const base = process.env.VIDEO_SERVICE_URL;
   const token = process.env.VIDEO_API_TOKEN;
-  if (!base || !token) return { updated: 0 };
+  if (!base || !token) return { updated: 0, skipped: true };
   const prisma = await db();
   const videos = await prisma.video.findMany({ where: { status: "processing", remoteId: { not: "" } }, take: 20 });
   let updated = 0;
@@ -213,6 +271,10 @@ export async function runCron(job: string) {
   if (job === "retention") return runRetention();
   if (job === "summary") return runSummary();
   if (job === "webhooks") return runWebhooks();
-  if (job === "videos") return runVideoSync();
+  if (job === "videos") {
+    const checks = await runVideoChecks();
+    const uploads = await runVideoSync();
+    return { checks, uploads };
+  }
   return null;
 }

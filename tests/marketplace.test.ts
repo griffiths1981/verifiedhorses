@@ -38,6 +38,8 @@ it("seeds example horses and the placeholder prices once", async () => {
   const bella = await prisma.advert.findUnique({ where: { slug: "bella-thirsk-example" }, include: { documents: true, videos: true } });
   expect(bella?.isDemo).toBe(true);
   expect(bella?.videos[0]?.status).toBe("example");
+  expect(bella?.videos[0]?.provider).toBe("youtube");
+  expect(bella?.videos[0]?.remoteId).toBe("5ls8QsgClYc");
   expect(bella?.documents.some((document) => document.kind === "vetting")).toBe(true);
 });
 
@@ -95,7 +97,7 @@ it("demo payment does not call Stripe when no key is set", async () => {
       town: "Thirsk",
       county: "North Yorkshire",
       description: "A long enough description for the submit rules to accept this draft during the test.",
-      videos: { create: { status: "ready", durationSec: 10 } },
+      videos: { create: { status: "ready", provider: "youtube", remoteId: "jNQXAC9IVRw", playbackPath: "https://www.youtube.com/watch?v=jNQXAC9IVRw" } },
     },
   });
   const result = await demoPayAdvert(seller!.id, draft.id, "standard");
@@ -103,4 +105,18 @@ it("demo payment does not call Stripe when no key is set", async () => {
   const stored = await prisma.advert.findUnique({ where: { id: draft.id } });
   expect(stored?.status).toBe("pending");
   expect(stored?.paidAt).not.toBeNull();
+});
+
+it("flags a YouTube link when oEmbed refuses the embed", async () => {
+  const { db } = await import("../lib/prisma");
+  const { runVideoChecks } = await import("../lib/cron-jobs");
+  const prisma = await db();
+  const video = await prisma.video.findFirst({ where: { advert: { slug: "bella-thirsk-example" } } });
+  expect(video?.remoteId).toBeTruthy();
+  const result = await runVideoChecks(async () => new Response("no", { status: 401 }));
+  expect(result.flagged).toBeGreaterThan(0);
+  const updated = await prisma.video.findUnique({ where: { id: video!.id } });
+  expect(updated?.embedStatus).toBe("embed_disabled");
+  const event = await prisma.botEvent.findFirst({ where: { type: "video.flagged" } });
+  expect(event?.payload).toContain("embed_disabled");
 });

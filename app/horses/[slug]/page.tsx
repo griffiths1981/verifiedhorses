@@ -5,11 +5,14 @@ import { defaultFilters } from "@/lib/search";
 import { currentUser } from "@/lib/current-user";
 import { db } from "@/lib/prisma";
 import { advertHeading, seoTitle } from "@/lib/description";
-import { formatAge, formatDate, formatDuration, formatHeight, formatMonthYear, formatPrice } from "@/lib/format";
+import { formatAge, formatDate, formatHeight, formatMonthYear, formatPrice } from "@/lib/format";
 import { DOC_KINDS, PLATFORM_DISCLAIMER, REPORT_REASONS, TRAITS, docLabel } from "@/lib/constants";
 import { baseUrl } from "@/lib/config";
 import { reportAdvert, sendEnquiry, toggleSave } from "@/lib/actions/enquiries";
 import { AdvertCard } from "@/components/advert-card";
+import { VideoFacade } from "@/components/video-facade";
+import { embedStatusLabel, posterFor } from "@/lib/video-links";
+import { CLIPS } from "@/lib/constants";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -35,17 +38,11 @@ export default async function AdvertPage({ params, searchParams }: { params: Pro
     await prisma.advert.update({ where: { id: advert.id }, data: { views: { increment: 1 } } });
   }
   const title = advertHeading(advert);
-  const video = advert.videos[0];
-  const playback = video?.playbackPath
-    ? video.playbackPath.startsWith("http")
-      ? video.playbackPath
-      : `/api/media/videos/${video.id}`
-    : "";
-  const poster = video?.posterPath
-    ? video.posterPath.startsWith("http")
-      ? video.posterPath
-      : ""
-    : "";
+  const clips = [...advert.videos].sort((a, b) => {
+    const order = CLIPS.map(([key]) => key);
+    return order.indexOf(a.clipKey as (typeof CLIPS)[number][0]) - order.indexOf(b.clipKey as (typeof CLIPS)[number][0]);
+  });
+  const lead = clips.find((video) => video.remoteId) || clips[0];
   const similar = await searchCatalogue({ ...defaultFilters({ type: advert.type === "cob" ? "cob" : advert.type }), page: 1 });
   const share = `${baseUrl()}/horses/${advert.slug}`;
   const product = {
@@ -72,19 +69,23 @@ export default async function AdvertPage({ params, searchParams }: { params: Pro
         <div className="grid-2">
           <div>
             <h1>{title}</h1>
-            <div className="video-frame">
-              {playback ? (
-                <video controls preload="none" poster={poster || undefined}>
-                  <source src={playback} />
-                </video>
-              ) : (
-                <div style={{ padding: 24, textAlign: "center" }}>
-                  <p className="badge" style={{ position: "static" }}>{video ? `${formatDuration(video.durationSec)} video` : "Video"}</p>
-                  <p>This example has no video file. On a real advert the riding clip plays here, with the sound off until you press play.</p>
-                </div>
-              )}
-            </div>
-            <p className="muted">Gallery · Video first · Riding clips: {(advert.clips || "not ticked").replaceAll(",", " / ")}</p>
+            {lead?.remoteId ? (
+              <VideoFacade provider={lead.provider} videoId={lead.remoteId} poster={posterFor(lead)} title={`${advert.horseName || "Advert"} ${lead.clipKey || "video"}`} />
+            ) : (
+              <div className="video-frame"><p>This advert has no video link yet.</p></div>
+            )}
+            <p className="muted">Gallery · Video first · The player loads when you press play. Nothing starts on its own.</p>
+            {clips.length ? (
+              <ul className="plain-list">
+                {clips.map((video) => (
+                  <li key={video.id}>
+                    <strong>{CLIPS.find(([key]) => key === video.clipKey)?.[1] || "Clip"}</strong>
+                    {video.playbackPath ? <> · <a href={video.playbackPath}>{video.provider === "vimeo" ? "Vimeo" : "YouTube"}</a></> : null}
+                    {video.embedStatus !== "ok" && video.embedStatus !== "unchecked" ? <span className="tag warn">{embedStatusLabel(video.embedStatus)}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             {advert.photos.length ? (
               <div className="row">
                 {advert.photos.map((photo) => (

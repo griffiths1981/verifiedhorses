@@ -7,6 +7,7 @@ import { PRICING_DEFAULTS, defaultTierForType } from "../lib/pricing";
 import { draftDescription } from "../lib/description";
 import { PLATFORM_DISCLAIMER } from "../lib/constants";
 import { hashPassword, verifyPassword } from "../lib/password";
+import { embedStatusFromHttp, parseVideoUrl } from "../lib/video-links";
 import fs from "node:fs";
 
 describe("UK formatting", () => {
@@ -137,6 +138,33 @@ describe("pricing and copy", () => {
     expect(PLATFORM_DISCLAIMER).toMatch(/own vetting/);
     expect(terms).toContain("PLATFORM_DISCLAIMER");
     expect(fs.readFileSync("app/legal/privacy/page.tsx", "utf8")).toMatch(/UK GDPR/);
+  });
+});
+
+describe("video links", () => {
+  it("reads YouTube watch, short and Shorts links, and Vimeo links", () => {
+    const watch = parseVideoUrl("https://www.youtube.com/watch?v=5ls8QsgClYc&t=12s");
+    const short = parseVideoUrl("https://youtu.be/5ls8QsgClYc");
+    const shorts = parseVideoUrl("https://www.youtube.com/shorts/5ls8QsgClYc");
+    const vimeo = parseVideoUrl("https://vimeo.com/76979871");
+    expect(watch?.id).toBe("5ls8QsgClYc");
+    expect(short?.id).toBe("5ls8QsgClYc");
+    expect(shorts?.provider).toBe("youtube");
+    expect(watch?.embedUrl).toBe("https://www.youtube-nocookie.com/embed/5ls8QsgClYc?rel=0");
+    expect(watch?.posterUrl).toBe("https://i.ytimg.com/vi/5ls8QsgClYc/hqdefault.jpg");
+    expect(vimeo?.provider).toBe("vimeo");
+    expect(vimeo?.id).toBe("76979871");
+    expect(vimeo?.embedUrl).toContain("player.vimeo.com/video/76979871");
+    expect(parseVideoUrl("https://example.com/watch?v=5ls8QsgClYc")).toBeNull();
+    expect(parseVideoUrl("not a link")).toBeNull();
+  });
+
+  it("maps YouTube oEmbed failures onto private, unavailable and embedding-off", () => {
+    expect(embedStatusFromHttp(200)).toBe("ok");
+    expect(embedStatusFromHttp(401)).toBe("embed_disabled");
+    expect(embedStatusFromHttp(403)).toBe("private");
+    expect(embedStatusFromHttp(404)).toBe("unavailable");
+    expect(embedStatusFromHttp(500)).toBe("unchecked");
   });
 });
 

@@ -1,6 +1,7 @@
 import { db } from "./prisma";
 import { defaultFilters, matchesAdvert, paginate, sortMatches, type SearchFilters, type SearchableAdvert } from "./search";
 import { lookupPlace } from "./places";
+import { countsAsVideo } from "./video-links";
 
 const include = { seller: true, videos: true, documents: true, photos: true } as const;
 
@@ -46,7 +47,7 @@ export function asSearchable(advert: {
     lng: advert.lng,
     status: advert.status,
     sellerVerified: advert.seller.idStatus === "verified",
-    hasVideo: advert.videos.some((video) => video.status === "ready" || video.status === "example"),
+    hasVideo: advert.videos.some((video) => countsAsVideo(video)),
     featured: advert.featured,
     publishedAt: advert.publishedAt?.toISOString() || null,
   };

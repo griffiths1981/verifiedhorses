@@ -10,7 +10,7 @@ Buyers search by type, postcode and budget. Sellers prove who they are, lead wit
 - Prisma 7 with SQLite locally and MySQL in production
 - Auth.js (`next-auth` 5) with email and password
 - Stripe Checkout and Stripe Identity, test mode, or a demo flow when no keys are set
-- A separate video encoder in `video-service/` for the Linux VPS
+- YouTube and Vimeo links, played from a picture until the buyer presses play
 
 ## Run it locally
 
@@ -59,14 +59,18 @@ https://USER:PASSWORD@your-staging-host/api/cron/all?secret=CRON_SECRET
 
 Suggested cron, once a day is enough at the start:
 
-- `/api/cron/all` runs alerts, draft nudges, video status, webhook delivery, retention, then sends the outbox
+- `/api/cron/all` runs alerts, draft nudges, YouTube and Vimeo checks, webhook delivery, retention, then sends the outbox
 - `/api/cron/summary` emails a moderation count to `CONTACT_EMAIL`
 
 Images are served directly (`images.unoptimized`). That is deliberate: the Next image optimiser would fetch pictures without the visitor's basic-auth header and they would break.
 
-## Video service
+## Video
 
-Encoding does not run on the web host. Hostinger Cloud has no FFmpeg and no long-running worker. `video-service/README.md` and `video-service/setup.sh` install the encoder on the VPS. Leave `VIDEO_SERVICE_URL` empty and uploads are stored on the web server without transcoding, which is only for local development.
+Sellers upload the clip to YouTube (Unlisted is fine) or Vimeo and paste the link. The site stores the video id. Advert pages show the YouTube thumbnail and load `youtube-nocookie.com` only after a tap. Nothing autoplays.
+
+A daily cron job asks YouTube and Vimeo oEmbed whether each clip can still be embedded, and flags private, missing and embedding-disabled videos for the moderation queue.
+
+`video-service/` is an unused file uploader. It stays in the repo and does nothing unless `VIDEO_UPLOADS_ENABLED=true`. Do not set that for this version.
 
 ## Environment variables
 
@@ -89,7 +93,7 @@ See `.env.example` for the full list.
 | `MAIL_FROM` | From address when Brevo is set. |
 | `BREVO_API_KEY` | Optional. Without it, mail is written to the outbox and the log. |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Test keys only. Without them, identity and fees use the on-screen demo buttons. |
-| `VIDEO_SERVICE_URL` / `VIDEO_PUBLIC_URL` / `VIDEO_API_TOKEN` / `VIDEO_CALLBACK_SECRET` | The VPS encoder. |
+| `VIDEO_UPLOADS_ENABLED` | Leave `false`. The old file uploader is not part of the seller flow. |
 | `BOT_WEBHOOK_URL` / `BOT_WEBHOOK_SECRET` | Optional push of moderation events. The poll API works without them. |
 | `DEFAULT_OUTCODE` | Home page “near you” point. Default `YO1`. |
 | `SHOW_DEV_EMAIL_LINKS` | Set `false` to hide confirmation links on screen. They are shown only when Brevo is unset. |

@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { ownedAdvert } from "@/lib/owned";
 import { sniff, saveUpload } from "@/lib/files";
+import { videoUploadsEnabled } from "@/lib/config";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+  if (!videoUploadsEnabled()) return new Response("Video uploads are switched off.", { status: 404 });
   const { id } = await context.params;
   const owned = await ownedAdvert(id);
   if ("error" in owned) redirect("/login");

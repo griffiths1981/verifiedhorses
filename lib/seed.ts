@@ -495,11 +495,19 @@ async function createHorse(sellerId: string, input: HorseInput) {
       soldPricePence: input.soldPricePence,
       showSoldPrice: Boolean(input.showSoldPrice),
       videos: {
-        create: {
+        create: (input.clips.split(",").filter(Boolean).length ? input.clips.split(",").filter(Boolean) : ["walk"]).map((clipKey, index) => ({
+          provider: "youtube",
+          clipKey,
+          remoteId: "5ls8QsgClYc",
+          sourceUrl: "https://www.youtube.com/watch?v=5ls8QsgClYc",
+          playbackPath: "https://www.youtube.com/watch?v=5ls8QsgClYc",
+          posterPath: "https://i.ytimg.com/vi/5ls8QsgClYc/hqdefault.jpg",
           status: "example",
+          embedStatus: "unchecked",
           durationSec: input.duration,
-          clips: input.clips,
-        },
+          clips: clipKey,
+          sortOrder: index,
+        })),
       },
       documents: {
         create: input.documents.map(([kind, issued]) => ({

@@ -1,7 +1,8 @@
 import { ownedAdvert } from "@/lib/owned";
-import { videoServiceConfigured } from "@/lib/config";
+import { videoServiceConfigured, videoUploadsEnabled } from "@/lib/config";
 
 export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
+  if (!videoUploadsEnabled()) return Response.json({ error: "uploads are off" }, { status: 404 });
   const { id } = await context.params;
   const owned = await ownedAdvert(id);
   if ("error" in owned) return Response.json({ error: owned.error }, { status: 401 });

@@ -26,6 +26,7 @@ const longFields = new Set([
   "OutboxEmail.body",
   "BotEvent.payload",
   "Setting.value",
+  "Video.sourceUrl",
 ]);
 
 let model = "";

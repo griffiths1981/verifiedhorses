@@ -1,6 +1,8 @@
 # VerifiedHorses video service
 
-This small Node service runs on the Linux VPS (the KVM, not the Hostinger Cloud site). Sellers' videos are uploaded here, FFmpeg makes a 720p MP4 and a poster image, and the files are served from this machine. The website only stores the URLs.
+**Not used.** Sellers paste YouTube or Vimeo links. This uploader stays in the repo only. It does nothing unless the web app has `VIDEO_UPLOADS_ENABLED=true`, which is off. Do not install it for the current site.
+
+This small Node service can run on a Linux VPS (the KVM, not the Hostinger Cloud site). Sellers' videos are uploaded here, FFmpeg makes a 720p MP4 and a poster image, and the files are served from this machine. The website only stores the URLs.
 
 HLS is optional (`VIDEO_HLS=true`). The default is MP4 because it plays in every current browser without a script. MP4 is the right default on a 2-vCPU box.
 

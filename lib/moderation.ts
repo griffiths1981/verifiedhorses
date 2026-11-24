@@ -79,7 +79,7 @@ export async function submitAdvert(id: string, userId: string) {
   const advert = await prisma.advert.findUnique({ where: { id }, include: { videos: true, seller: true } });
   if (!advert || advert.sellerId !== userId) return { ok: false as const, error: "not_found" };
   if (advert.seller.idStatus !== "verified") return { ok: false as const, error: "identity" };
-  if (!advert.videos.length) return { ok: false as const, error: "video" };
+  if (!advert.videos.some((video) => video.remoteId)) return { ok: false as const, error: "video" };
   if (advert.description.trim().length < 40) return { ok: false as const, error: "description" };
   if (!advert.town || !advert.county) return { ok: false as const, error: "place" };
   if (advert.pricePence <= 0) return { ok: false as const, error: "price" };

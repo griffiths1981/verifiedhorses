@@ -18,8 +18,12 @@ export function stripeConfigured(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY);
 }
 
+export function videoUploadsEnabled(): boolean {
+  return process.env.VIDEO_UPLOADS_ENABLED === "true";
+}
+
 export function videoServiceConfigured(): boolean {
-  return Boolean(process.env.VIDEO_SERVICE_URL && process.env.VIDEO_API_TOKEN);
+  return videoUploadsEnabled() && Boolean(process.env.VIDEO_SERVICE_URL && process.env.VIDEO_API_TOKEN);
 }
 
 export function showDevEmailLinks(): boolean {

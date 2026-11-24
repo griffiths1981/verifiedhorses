@@ -42,7 +42,7 @@ export default async function PreviewStep({ params, searchParams }: { params: Pr
         <p><a href={`/horses/${advert.slug}`}>Open the preview as a buyer would see it</a></p>
         <ul>
           <li>Identity: {user.idStatus}</li>
-          <li>Videos: {advert.videos.length}</li>
+          <li>Videos: {advert.videos.length ? advert.videos.map((video) => video.playbackPath || video.remoteId).join(", ") : "none yet"}</li>
           <li>Documents: {advert.documents.length}</li>
           <li>Status: {advert.status}</li>
         </ul>

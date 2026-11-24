@@ -9,6 +9,7 @@ import { defaultTierForType } from "../pricing";
 import { lookupPlace } from "../places";
 import { poundsToPence, parseHands, slugify } from "../format";
 import { draftDescription, socialCaption } from "../description";
+import { parseVideoUrl } from "../video-links";
 import { createCheckout, demoPayAdvert } from "../payments";
 import { baseUrl } from "../config";
 
@@ -44,9 +45,36 @@ export async function startAdvert(formData: FormData) {
 export async function saveClips(formData: FormData) {
   const id = String(formData.get("id") || "");
   const { prisma } = await owned(id);
-  const clips = CLIPS.map(([key]) => key).filter((key) => formData.get(`clip_${key}`) === "on");
   const videoNote = String(formData.get("videoNote") || "").slice(0, 240);
-  await prisma.advert.update({ where: { id }, data: { clips: clips.join(","), videoNote } });
+  const links: Array<{ key: string; parsed: NonNullable<ReturnType<typeof parseVideoUrl>> }> = [];
+  for (const [key] of CLIPS) {
+    const raw = String(formData.get(`link_${key}`) || "").trim();
+    if (!raw) continue;
+    const parsed = parseVideoUrl(raw);
+    if (!parsed) redirect(`/sell/${id}/video?error=link&clip=${key}`);
+    links.push({ key, parsed });
+  }
+  if (!links.length) redirect(`/sell/${id}/video?error=missing`);
+  await prisma.video.deleteMany({ where: { advertId: id } });
+  await prisma.video.createMany({
+    data: links.map((link, index) => ({
+      advertId: id,
+      provider: link.parsed.provider,
+      clipKey: link.key,
+      remoteId: link.parsed.id,
+      sourceUrl: String(formData.get(`link_${link.key}`) || "").trim().slice(0, 2000),
+      playbackPath: link.parsed.canonicalUrl,
+      posterPath: link.parsed.posterUrl,
+      status: "ready",
+      embedStatus: "unchecked",
+      clips: link.key,
+      sortOrder: index,
+    })),
+  });
+  await prisma.advert.update({
+    where: { id },
+    data: { clips: links.map((link) => link.key).join(","), videoNote },
+  });
   redirect(`/sell/${id}/facts`);
 }
 

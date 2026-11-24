@@ -30,6 +30,9 @@ Event types:
 - `report.created` — a report on an advert
 - `message.flagged` — a message matched a scam rule (deposit, off-site app, bank details, and similar)
 - `identity.updated` — Stripe Identity, or the demo check, changed a seller's status
+- `video.flagged` — oEmbed says a clip is private, missing, or cannot be embedded
+
+`GET /api/admin/queue` also returns `flaggedVideos`, each with the advert and the stored link.
 
 ## Queue
 
@@ -64,7 +67,7 @@ Prices are in pence. £29 is `2900`.
 | `/api/cron/alerts` | Emails saved searches about new matches |
 | `/api/cron/nudges` | Emails sellers whose draft is over 24 hours old |
 | `/api/cron/emails` | Sends the outbox, or logs it when Brevo is unset |
-| `/api/cron/videos` | Asks the video service about clips that are still encoding |
+| `/api/cron/videos` | Checks YouTube and Vimeo oEmbed. Flags private, missing and embedding-disabled clips. The old file uploader is skipped unless `VIDEO_UPLOADS_ENABLED=true`. |
 | `/api/cron/webhooks` | Retries pending bot events |
 | `/api/cron/retention` | Deletes expired email-confirmation tokens |
 | `/api/cron/summary` | Emails a count of the queue to `CONTACT_EMAIL` |

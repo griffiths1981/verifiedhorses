@@ -17,12 +17,18 @@ export async function handleAdmin(method: string, segments: string[], body: Reco
   const [a, b, c] = segments;
 
   if (method === "GET" && a === "queue") {
-    const [pendingAdverts, openReports, flaggedMessages] = await Promise.all([
-      prisma.advert.findMany({ where: { status: "pending" }, include: { seller: true }, orderBy: { updatedAt: "asc" }, take: 50 }),
+    const [pendingAdverts, openReports, flaggedMessages, flaggedVideos] = await Promise.all([
+      prisma.advert.findMany({ where: { status: "pending" }, include: { seller: true, videos: true }, orderBy: { updatedAt: "asc" }, take: 50 }),
       prisma.report.findMany({ where: { status: "open" }, orderBy: { createdAt: "asc" }, take: 50 }),
       prisma.message.findMany({ where: { flagged: true }, orderBy: { createdAt: "desc" }, take: 50 }),
+      prisma.video.findMany({
+        where: { embedStatus: { in: ["unavailable", "private", "embed_disabled"] } },
+        include: { advert: { select: { id: true, slug: true, horseName: true, status: true } } },
+        orderBy: { checkedAt: "desc" },
+        take: 50,
+      }),
     ]);
-    return { status: 200, json: { pendingAdverts, openReports, flaggedMessages } };
+    return { status: 200, json: { pendingAdverts, openReports, flaggedMessages, flaggedVideos } };
   }
 
   if (method === "GET" && a === "events") {

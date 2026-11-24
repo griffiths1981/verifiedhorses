@@ -173,7 +173,29 @@ textarea { min-height: 140px; }
 .poster {
   position: relative;
   aspect-ratio: 16 / 10;
-  background: linear-gradient(160deg, #d7decc, #f3ecdf 58%, #c9d3bf);
+  background: linear-gradient(160deg, #d7decc, #f3ecdf 58%, #c9d3bf) center 42% / cover no-repeat;
+}
+.play-badge, .video-poster .play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(27, 42, 36, 0.78);
+  color: white;
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+}
+.video-poster {
+  width: 100%;
+  min-height: 280px;
+  border: 0;
+  cursor: pointer;
+  background: #24362e center / cover no-repeat;
+  color: white;
 }
 .poster.b { background: linear-gradient(160deg, #cfd8c6, #e7efe3 50%, #e6d7c0); }
 .poster.c { background: linear-gradient(165deg, #e4d8c2, #d5e0d4); }

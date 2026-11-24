@@ -6,7 +6,7 @@
 
 - Accounts with email confirmation. Sellers and buyers. No SMS.
 - Stripe Identity when test keys are set, and a clearly labelled demo check when they are not.
-- Five-step sell flow: you, video, facts, papers, preview and fee.
+- Five-step sell flow: you, YouTube or Vimeo links, facts, papers, preview and fee. Each riding clip can have its own link. The player is a thumbnail until someone taps it.
 - Video-first advert pages: clip checklist, key facts, dated documents, the “good to…” grid, a buy-safely panel, a report button, and a sticky message bar on mobile.
 - Search with type, place and radius, budget, suits, and the other filters. Verified sellers and “has video” are on until you turn them off.
 - County and type pages. They stay `noindex` on staging, and they stay `noindex` later until a page has at least three live adverts.
@@ -23,7 +23,7 @@
 - Self-hosted Fraunces and Inter. UK English, GBP, dates as day/month/year.
 - Example horses, clearly marked, so the staging site is not empty.
 - `server.js` for Hostinger: listen immediately, 503 until ready, migrate, seed if empty, then Next. Preview basic auth. `noindex`.
-- Video encoder in `video-service/`, with `setup.sh` and its own README. MP4 and a poster by default. HLS if you turn it on.
+- YouTube and Vimeo links, stored as a video id. Cards use the YouTube thumbnail and a play badge. A cron job flags clips that are private, missing, or cannot be embedded. `video-service/` remains in the repo and is off unless `VIDEO_UPLOADS_ENABLED=true`.
 - Tests, a production build, and `npm audit` with no critical or high findings. Two moderate findings remain inside Vitest, which is not a production dependency. The video service audit is clean.
 
 ## Stubbed or left for later
@@ -51,7 +51,7 @@ Listed in `.env.example` and the README. The ones that matter before a staging d
 2. The domain, when you want one. `BASE_URL` is the only place the origin is set.
 3. Final prices, and whether the first months should be free. The pricing page has a switch for that. The seeded numbers are placeholders.
 4. Whether the trade fee should stay as a badge until yard pages exist.
-5. The VPS: install the video service beside what is already running, or use a separate machine. This build does not log in to the VPS.
+5. Video is YouTube and Vimeo, so the VPS encoder is not needed. Leave `VIDEO_UPLOADS_ENABLED` false.
 6. Stripe test keys, a Brevo key, and the from-address, when you want real email and real test payments.
 7. The ICO fee, before any real personal data is collected. The privacy notice names the operator as “to be confirmed” until then.
 8. Example data: set `SEED_DEMO=false` before any real seller uses the database, or use “Remove example data” in the admin queue.

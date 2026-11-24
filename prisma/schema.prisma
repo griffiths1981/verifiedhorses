@@ -116,17 +116,22 @@ model Advert {
 }
 
 model Video {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   advertId     String
-  remoteId     String   @default("")
-  status       String   @default("processing")
-  posterPath   String   @default("")
-  playbackPath String   @default("")
-  durationSec  Int      @default(0)
-  clips        String   @default("")
-  sortOrder    Int      @default(0)
-  createdAt    DateTime @default(now())
-  advert       Advert   @relation(fields: [advertId], references: [id], onDelete: Cascade)
+  provider     String    @default("youtube")
+  clipKey      String    @default("")
+  remoteId     String    @default("")
+  sourceUrl    String    @default("")
+  status       String    @default("ready")
+  embedStatus  String    @default("unchecked")
+  posterPath   String    @default("")
+  playbackPath String    @default("")
+  durationSec  Int       @default(0)
+  clips        String    @default("")
+  sortOrder    Int       @default(0)
+  checkedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  advert       Advert    @relation(fields: [advertId], references: [id], onDelete: Cascade)
 
   @@index([advertId])
   @@index([remoteId])
