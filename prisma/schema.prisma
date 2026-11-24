@@ -1,0 +1,325 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String
+  name            String   
+  role            String    @default("buyer")
+  sellerType      String    @default("private")
+  phone           String    @default("")
+  emailVerifiedAt DateTime?
+  idStatus        String    @default("none")
+  idVerifiedAt    DateTime?
+  idSessionId     String    @default("")
+  county          String    @default("")
+  postcode        String    @default("")
+  bio             String    @default("")
+  bannedAt        DateTime?
+  isDemo          Boolean   @default(false)
+  tradeUntil      DateTime?
+  referralCode    String    @unique
+  referredBy      String    @default("")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  adverts          Advert[]
+  emailTokens      EmailToken[]
+  sentMessages     Message[]     @relation("MessageFrom")
+  receivedMessages Message[]     @relation("MessageTo")
+  reports          Report[]
+  savedSearches    SavedSearch[]
+  savedAdverts     SavedAdvert[]
+  payments         Payment[]
+  threadsAsBuyer   Thread[]      @relation("ThreadBuyer")
+  threadsAsSeller  Thread[]      @relation("ThreadSeller")
+}
+
+model EmailToken {
+  id        String    @id @default(cuid())
+  userId    String
+  purpose   String   
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Advert {
+  id             String    @id @default(cuid())
+  sellerId       String
+  slug           String    @unique
+  title          String    @default("")
+  type           String   
+  breed          String    @default("")
+  horseName      String    @default("")
+  ageYears       Int       @default(0)
+  ageMonths      Int       @default(0)
+  heightInches   Int       @default(0)
+  colour         String    @default("")
+  sex            String    @default("")
+  level          String    @default("")
+  suits          String    @default("")
+  pricePence     Int       @default(0)
+  negotiable     Boolean   @default(false)
+  postcode       String    @default("")
+  outcode        String    @default("")
+  town           String    @default("")
+  county         String    @default("")
+  region         String    @default("")
+  lat            Float     @default(0)
+  lng            Float     @default(0)
+  description    String    @default("")
+  videoNote      String    @default("")
+  status         String    @default("draft")
+  soldAt         DateTime?
+  soldPricePence Int?
+  showSoldPrice  Boolean   @default(false)
+  isDemo         Boolean   @default(false)
+  featured       Boolean   @default(false)
+  views          Int       @default(0)
+  tierSlug       String    @default("standard")
+  paidAt         DateTime?
+  clips          String    @default("")
+  socialCaption  String    @default("")
+  rejectionNote  String    @default("")
+  nudgedAt       DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  publishedAt    DateTime?
+
+  seller     User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  videos     Video[]
+  photos     Photo[]
+  documents  Document[]
+  traits     Trait[]
+  messages   Message[]
+  reports    Report[]
+  savedBy    SavedAdvert[]
+  payments   Payment[]
+  threads    Thread[]
+
+  @@index([status, type])
+  @@index([status, county])
+  @@index([sellerId])
+  @@index([publishedAt])
+}
+
+model Video {
+  id           String    @id @default(cuid())
+  advertId     String
+  provider     String    @default("youtube")
+  clipKey      String    @default("")
+  remoteId     String    @default("")
+  sourceUrl    String    @default("")
+  status       String    @default("ready")
+  embedStatus  String    @default("unchecked")
+  posterPath   String    @default("")
+  playbackPath String    @default("")
+  durationSec  Int       @default(0)
+  clips        String    @default("")
+  sortOrder    Int       @default(0)
+  checkedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  advert       Advert    @relation(fields: [advertId], references: [id], onDelete: Cascade)
+
+  @@index([advertId])
+  @@index([remoteId])
+}
+
+model Photo {
+  id        String @id @default(cuid())
+  advertId  String
+  path      String
+  alt       String @default("")
+  sortOrder Int    @default(0)
+  advert    Advert @relation(fields: [advertId], references: [id], onDelete: Cascade)
+
+  @@index([advertId])
+}
+
+model Document {
+  id          String    @id @default(cuid())
+  advertId    String
+  kind        String   
+  issuedOn    DateTime?
+  visibility  String    @default("logged_in")
+  filename    String    @default("")
+  storagePath String    @default("")
+  microchip   String    @default("")
+  createdAt   DateTime  @default(now())
+  advert      Advert    @relation(fields: [advertId], references: [id], onDelete: Cascade)
+
+  @@index([advertId])
+}
+
+model Trait {
+  id       String @id @default(cuid())
+  advertId String
+  key      String
+  value    String
+  advert   Advert @relation(fields: [advertId], references: [id], onDelete: Cascade)
+
+  @@unique([advertId, key])
+}
+
+model Thread {
+  id        String   @id @default(cuid())
+  advertId  String
+  buyerId   String
+  sellerId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  advert    Advert   @relation(fields: [advertId], references: [id], onDelete: Cascade)
+  buyer     User     @relation("ThreadBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller    User     @relation("ThreadSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@unique([advertId, buyerId])
+  @@index([sellerId])
+  @@index([buyerId])
+}
+
+model Message {
+  id         String    @id @default(cuid())
+  threadId   String
+  advertId   String
+  fromUserId String
+  toUserId   String
+  body       String   
+  redacted   String    @default("")
+  scamFlags  String    @default("")
+  flagged    Boolean   @default(false)
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+  thread     Thread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  advert     Advert    @relation(fields: [advertId], references: [id], onDelete: Cascade)
+  fromUser   User      @relation("MessageFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser     User      @relation("MessageTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+  @@index([flagged])
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  advertId   String?
+  messageId  String   @default("")
+  reporterId String?
+  reason     String  
+  details    String   @default("")
+  status     String   @default("open")
+  createdAt  DateTime @default(now())
+  advert     Advert?  @relation(fields: [advertId], references: [id], onDelete: SetNull)
+  reporter   User?    @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+}
+
+model SavedSearch {
+  id               String   @id @default(cuid())
+  userId           String
+  name             String  
+  filters          String  
+  alerts           Boolean  @default(true)
+  lastNotifiedAt   DateTime @default(now())
+  unsubscribeToken String   @unique
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model SavedAdvert {
+  userId    String
+  advertId  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  advert    Advert   @relation(fields: [advertId], references: [id], onDelete: Cascade)
+
+  @@id([userId, advertId])
+}
+
+model PricingTier {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String  
+  description String   @default("")
+  pricePence  Int
+  kind        String  
+  appliesTo   String   @default("")
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  updatedAt   DateTime @updatedAt
+}
+
+model Payment {
+  id          String    @id @default(cuid())
+  userId      String
+  advertId    String?
+  tierSlug    String   
+  amountPence Int
+  status      String    @default("pending")
+  provider    String    @default("stripe")
+  checkoutRef String    @default("")
+  createdAt   DateTime  @default(now())
+  paidAt      DateTime?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  advert      Advert?   @relation(fields: [advertId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([checkoutRef])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String   @default("")
+  actorType  String   @default("system")
+  action     String  
+  targetType String   @default("")
+  targetId   String   @default("")
+  detail     String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+}
+
+model OutboxEmail {
+  id        String    @id @default(cuid())
+  toEmail   String   
+  subject   String   
+  body      String   
+  kind      String   
+  status    String    @default("queued")
+  createdAt DateTime  @default(now())
+  sentAt    DateTime?
+
+  @@index([status])
+}
+
+model BotEvent {
+  id          String    @id @default(cuid())
+  type        String   
+  payload     String   
+  status      String    @default("pending")
+  createdAt   DateTime  @default(now())
+  deliveredAt DateTime?
+
+  @@index([status])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
